@@ -27,6 +27,19 @@ public class AllGeofencesFragment extends Fragment implements AddGeofenceFragmen
 
     private AllGeofencesAdapter allGeofencesAdapter;
 
+    private GeofenceController.GeofenceControllerListener geofenceControllerListener =
+            new GeofenceController.GeofenceControllerListener() {
+                @Override
+                public void onGeofencesUpdated() {
+                    refresh();
+                }
+
+                @Override
+                public void onError() {
+                    showErrorToast();
+                }
+            };
+
     // endregion
 
     // region Overrides
@@ -58,6 +71,9 @@ public class AllGeofencesFragment extends Fragment implements AddGeofenceFragmen
             }
         });
 
+        allGeofencesAdapter = new AllGeofencesAdapter(GeofenceController.getInstance().getNamedGeofences());
+        viewHolder.geofenceRecyclerView.setAdapter(allGeofencesAdapter);
+
         refresh();
     }
 
@@ -66,7 +82,13 @@ public class AllGeofencesFragment extends Fragment implements AddGeofenceFragmen
     // region Private
 
     private void refresh() {
+        allGeofencesAdapter.notifyDataSetChanged();
 
+        if (allGeofencesAdapter.getItemCount() > 0) {
+            getViewHolder().emptyState.setVisibility(View.INVISIBLE);
+        } else {
+            getViewHolder().emptyState.setVisibility(View.VISIBLE);
+        }
     }
 
     private void showErrorToast() {
@@ -79,7 +101,7 @@ public class AllGeofencesFragment extends Fragment implements AddGeofenceFragmen
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, NamedGeofence geofence) {
-
+        GeofenceController.getInstance().addGeofence(geofence, geofenceControllerListener);
     }
 
     @Override
