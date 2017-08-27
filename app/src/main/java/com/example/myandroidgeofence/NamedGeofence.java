@@ -30,5 +30,15 @@ public class NamedGeofence implements Comparable {
         return name.compareTo(other.name);
     }
 
+    public Geofence geofence() {
+        id = UUID.randomUUID().toString();
+        return new Geofence.Builder()
+                .setRequestId(id)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .setCircularRegion(latitude, longitude, radius)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .build();
+    }
+
     // endregion
 }
