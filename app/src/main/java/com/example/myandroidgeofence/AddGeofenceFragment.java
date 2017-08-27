@@ -46,6 +46,9 @@ public class AddGeofenceFragment extends DialogFragment {
                 .setNegativeButton(R.string.Cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         AddGeofenceFragment.this.getDialog().cancel();
+                        if (listener != null) {
+                            listener.onDialogNegativeClick(AddGeofenceFragment.this);
+                        }
                     }
                 });
 
@@ -59,7 +62,24 @@ public class AddGeofenceFragment extends DialogFragment {
 
                     @Override
                     public void onClick(View view) {
+                        // 1. Check for valid data
+                        if (dataIsValid()) {
+                            // 2. Create a named geofence
+                            NamedGeofence geofence = new NamedGeofence();
+                            geofence.name = getViewHolder().nameEditText.getText().toString();
+                            geofence.latitude = Double.parseDouble(getViewHolder().latitudeEditText.getText().toString());
+                            geofence.longitude = Double.parseDouble(getViewHolder().longitudeEditText.getText().toString());
+                            geofence.radius = Float.parseFloat(getViewHolder().radiusEditText.getText().toString()) * 1000.0f;
 
+                            // 3. Call listener and dismiss or show error
+                            if (listener != null) {
+                                listener.onDialogPositiveClick(AddGeofenceFragment.this, geofence);
+                                dialog.dismiss();
+                            }
+                        } else {
+                            // 4. Display an error message
+                            showValidationErrorToast();
+                        }
                     }
 
                 });
