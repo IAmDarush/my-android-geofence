@@ -74,6 +74,15 @@ public class AllGeofencesFragment extends Fragment implements AddGeofenceFragmen
         allGeofencesAdapter = new AllGeofencesAdapter(GeofenceController.getInstance().getNamedGeofences());
         viewHolder.geofenceRecyclerView.setAdapter(allGeofencesAdapter);
 
+        allGeofencesAdapter.setListener(new AllGeofencesAdapter.AllGeofencesAdapterListener() {
+            @Override
+            public void onDeleteTapped(NamedGeofence namedGeofence) {
+                List<NamedGeofence> namedGeofences = new ArrayList<>();
+                namedGeofences.add(namedGeofence);
+                GeofenceController.getInstance().removeGeofences(namedGeofences, geofenceControllerListener);
+            }
+        });
+
         refresh();
     }
 

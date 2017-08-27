@@ -106,6 +106,42 @@ public class GeofenceController {
                 }
             };
 
+    private GoogleApiClient.ConnectionCallbacks connectionRemoveListener =
+            new GoogleApiClient.ConnectionCallbacks() {
+                @Override
+                public void onConnected(Bundle bundle) {
+                    // 1. Create a list of geofences to remove
+                    List<String> removeIds = new ArrayList<>();
+                    for (NamedGeofence namedGeofence : namedGeofencesToRemove) {
+                        removeIds.add(namedGeofence.id);
+                    }
+
+                    if (removeIds.size() > 0) {
+                        // 2. Use GoogleApiClient and the GeofencingApi to remove the geofences
+                        PendingResult<Status> result = LocationServices.GeofencingApi.removeGeofences(googleApiClient, removeIds);
+                        result.setResultCallback(new ResultCallback<Status>() {
+
+                            // 3. Handle the success or failure of the PendingResult
+                            @Override
+                            public void onResult(Status status) {
+                                if (status.isSuccess()) {
+                                    removeSavedGeofences();
+                                } else {
+                                    Log.e(TAG, "Removing geofence failed: " + status.getStatusMessage());
+                                    sendError();
+                                }
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onConnectionSuspended(int i) {
+                    Log.e(TAG, "Connecting to GoogleApiClient suspended.");
+                    sendError();
+                }
+            };
+
     private GoogleApiClient.OnConnectionFailedListener connectionFailedListener =
             new GoogleApiClient.OnConnectionFailedListener() {
                 @Override
@@ -169,6 +205,38 @@ public class GeofenceController {
 
         // Sort namedGeofences by name
         Collections.sort(namedGeofences);
+    }
+
+    public void removeGeofences(List<NamedGeofence> namedGeofencesToRemove, GeofenceControllerListener listener) {
+        this.namedGeofencesToRemove = namedGeofencesToRemove;
+        this.listener = listener;
+
+        connectWithCallbacks(connectionRemoveListener);
+    }
+
+    public void removeAllGeofences(GeofenceControllerListener listener) {
+        namedGeofencesToRemove = new ArrayList<>();
+        for (NamedGeofence namedGeofence : namedGeofences) {
+            namedGeofencesToRemove.add(namedGeofence);
+        }
+        this.listener = listener;
+
+        connectWithCallbacks(connectionRemoveListener);
+    }
+
+    private void removeSavedGeofences() {
+        SharedPreferences.Editor editor = prefs.edit();
+
+        for (NamedGeofence namedGeofence : namedGeofencesToRemove) {
+            int index = namedGeofences.indexOf(namedGeofence);
+            editor.remove(namedGeofence.id);
+            namedGeofences.remove(index);
+            editor.apply();
+        }
+
+        if (listener != null) {
+            listener.onGeofencesUpdated();
+        }
     }
 
 }
