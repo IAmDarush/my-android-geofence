@@ -18,7 +18,9 @@ import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class GeofenceController {
 
@@ -58,6 +60,9 @@ public class GeofenceController {
         namedGeofences = new ArrayList<>();
         namedGeofencesToRemove = new ArrayList<>();
         prefs = this.context.getSharedPreferences(Constants.SharedPrefs.Geofences, Context.MODE_PRIVATE);
+
+        loadGeofences();
+
     }
 
     public interface GeofenceControllerListener {
@@ -138,6 +143,11 @@ public class GeofenceController {
         if (listener != null) {
             listener.onGeofencesUpdated();
         }
+
+        String json = gson.toJson(namedGeofenceToAdd);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(namedGeofenceToAdd.id, json);
+        editor.apply();
     }
 
     public void addGeofence(NamedGeofence namedGeofence, GeofenceControllerListener listener) {
@@ -146,6 +156,19 @@ public class GeofenceController {
         this.listener = listener;
 
         connectWithCallbacks(connectionAddListener);
+    }
+
+    private void loadGeofences() {
+        // Loop over all geofence keys in prefs and add to namedGeofences
+        Map<String, ?> keys = prefs.getAll();
+        for (Map.Entry<String, ?> entry : keys.entrySet()) {
+            String jsonString = prefs.getString(entry.getKey(), null);
+            NamedGeofence namedGeofence = gson.fromJson(jsonString, NamedGeofence.class);
+            namedGeofences.add(namedGeofence);
+        }
+
+        // Sort namedGeofences by name
+        Collections.sort(namedGeofences);
     }
 
 }
