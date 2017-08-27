@@ -3,6 +3,8 @@ package com.example.myandroidgeofence;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
@@ -24,6 +26,19 @@ public class AllGeofencesActivity extends ActionBarActivity {
 
         GeofenceController.getInstance().init(this);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_all_geofences, menu);
+
+        MenuItem item = menu.findItem(R.id.action_delete_all);
+
+        if (GeofenceController.getInstance().getNamedGeofences().size() == 0) {
+            item.setVisible(false);
+        }
+
+        return true;
     }
 
     @Override
